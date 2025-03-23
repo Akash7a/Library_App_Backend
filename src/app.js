@@ -10,7 +10,7 @@ dotenv.config({
 });
 
 app.use(cors({
-  origin: "https://dashboard.render.com/static/srv-cvfqefjtq21c73duh4d0",
+  origin: "https://library-app-frontend-hlss.onrender.com",
   credentials: true,
   allowedHeaders: 'Content-Type, Authorization'
 }));
