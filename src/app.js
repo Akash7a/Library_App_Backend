@@ -10,7 +10,7 @@ dotenv.config({
 });
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://dashboard.render.com/static/srv-cvfqefjtq21c73duh4d0",
   credentials: true,
 }));
 
