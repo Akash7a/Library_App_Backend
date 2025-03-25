@@ -3,7 +3,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const options = {
     httpOnly: true,
-    secure: true,// process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite:"None",
 };
 
