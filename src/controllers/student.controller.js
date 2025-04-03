@@ -303,7 +303,17 @@ const findStudentsWithSubscriptionFinish = async (req, res) => {
             endDate.setHours(0, 0, 0, 0);
             return endDate < today && student.isSubscriptionActive === false;
         });
+        // Remove students who have paid the fee and have more than 0 days left
+        expiredStudents.forEach((student, index) => {
+            const endDate = new Date(student.subscriptionEndDate);
+            endDate.setHours(0, 0, 0, 0);
+            const timeDiff = endDate - today;
+            const remainingDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
+            if (remainingDays > 0 && student.isSubscriptionActive) {
+            expiredStudents.splice(index, 1);
+            }
+        });
         return res.status(200).json({
             count: expiredStudents.length,
             students: expiredStudents,
@@ -314,7 +324,6 @@ const findStudentsWithSubscriptionFinish = async (req, res) => {
         return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
-
 export {
     getStudents,
     addStudent,
