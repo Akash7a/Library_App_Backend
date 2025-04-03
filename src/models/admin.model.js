@@ -58,7 +58,7 @@ adminSchema.methods.generateToken = async function () {
         { _id: this._id, username: this.username },
         process.env.TOKEN_SECRET,
         {
-            expiresIn: "7d",
+            expiresIn: "2y",
         }
     )
 };
