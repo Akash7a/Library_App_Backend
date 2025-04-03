@@ -271,40 +271,46 @@ const getOneStudentProfile = async (req, res) => {
     }
 }
 
+ 
+let cachedStudents = []; // Global variable to cache students from getStudents
+
 const findStudentsWithSubscriptionFinish = async (req, res) => {
     try {
         const adminId = req.admin?._id;
 
         if (!adminId) {
-            return res.status(403).json({ message: "Unauthorized: Admin ID not found" });
+            return res.status(403).json({ message: "Unauthorized: Admin ID not found." });
         }
 
-        // Fetch all students whose subscription should be marked as inactive
-        const studentsToUpdate = await Students.find({
-            admin: adminId,
-            subscriptionEndDate: { $lt: new Date() }, // Fetching expired subscriptions
-            isSubscriptionActive: true, // Only updating active ones
-        });
+        // Ensure cachedStudents is populated by fetching students if not already cached
+        if (cachedStudents.length === 0) {
+            const admin = await Admin.findById(adminId).populate("myStudents");
 
-        // Update those students to inactive
-        await Students.updateMany(
-            { _id: { $in: studentsToUpdate.map(student => student._id) } },
-            { $set: { isSubscriptionActive: false } }
-        );
+            if (!admin || !admin.myStudents) {
+                return res.status(404).json({ message: "No students found for this admin." });
+            }
 
-        // Fetch all students whose subscription expired, whether updated now or previously
-        const expiredStudents = await Students.find({
-            admin: adminId,
-            subscriptionEndDate: { $lt: new Date() }, // Subscription expired
-            isSubscriptionActive: false, // Ensure we get deactivated students
+            cachedStudents = admin.myStudents;
+        }
+
+        // Get the current date normalized to the start of the day
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Filter students whose subscription has expired
+        const expiredStudents = cachedStudents.filter(student => {
+            const endDate = new Date(student.subscriptionEndDate);
+            endDate.setHours(0, 0, 0, 0);
+            return endDate < today && student.isSubscriptionActive === false;
         });
 
         return res.status(200).json({
             count: expiredStudents.length,
             students: expiredStudents,
-            message: "Fetched all students whose subscription has finished.",
+            message: "Fetched all students with expired subscriptions.",
         });
     } catch (error) {
+        console.error("Error fetching students with expired subscriptions:", error);
         return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
